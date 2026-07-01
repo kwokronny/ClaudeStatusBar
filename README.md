@@ -25,8 +25,8 @@ brew install --cask swiftbar
 2. 拷贝插件到 SwiftBar 的插件目录(首次启动 SwiftBar 时会让你选择该目录),并赋可执行权限:
 
    ```bash
-   cp bin/claude-signal.5s.sh "$(defaults read com.ambarski.SwiftBar PluginDirectory)/"
-   chmod +x "$(defaults read com.ambarski.SwiftBar PluginDirectory)/claude-signal.5s.sh"
+   cp bin/claude-signal.5s.sh "$(defaults read com.ameba.SwiftBar PluginDirectory)/"
+   chmod +x "$(defaults read com.ameba.SwiftBar PluginDirectory)/claude-signal.5s.sh"
    ```
 
    若上面的 `defaults read` 取不到目录,手动把 `bin/claude-signal.5s.sh` 拖到你在 SwiftBar 设置里指定的插件文件夹。
