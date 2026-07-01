@@ -56,11 +56,11 @@ Claude Code 在生命周期节点触发 hooks → `hook-handler.sh` 把状态写
 
 ## 需要你时的提醒
 
-当会话进入 🟡(答完等你)或 🔴(要授权/关注)时,`hook-handler.sh` 会后台调 `notify.sh`:播放提示音 + 弹出对话框(带「跳转」按钮,点它直接聚焦到那个会话)。同一会话在短时间内不重复打扰(去抖)。可用环境变量调整:
+当会话进入 🔴(要授权/关注)时,`hook-handler.sh` 会后台调 `notify.sh`:播放提示音 + 弹出对话框(带「跳转」按钮,点它直接聚焦到那个会话)。同一会话在短时间内不重复打扰(去抖)。可用环境变量调整:
 
 | 变量 | 默认 | 作用 |
 |---|---|---|
-| `CLAUDE_SIGNAL_NOTIFY_ON` | `waiting attention` | 哪些状态提醒。改成 `attention` 即"只在 🔴 时提醒" |
+| `CLAUDE_SIGNAL_NOTIFY_ON` | `attention` | 哪些状态提醒。改成 `waiting attention` 则答完等你(🟡)也提醒 |
 | `CLAUDE_SIGNAL_NOTIFY_DEBOUNCE` | `20` | 同一会话最短提醒间隔(秒) |
 | `CLAUDE_SIGNAL_NOTIFY_SOUND` | `/System/Library/Sounds/Glass.aiff` | 提示音 |
 | `CLAUDE_SIGNAL_NO_NOTIFY` | (未设) | 设为任意值则完全关闭提醒 |
