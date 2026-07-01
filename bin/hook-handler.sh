@@ -6,7 +6,10 @@ DIR="${CLAUDE_SIGNAL_DIR:-$HOME/.claude/claude-signal}"
 STATE="$DIR/state.json"
 
 mkdir -p "$DIR"
-[ -f "$STATE" ] || echo '{"sessions":{}}' > "$STATE"
+if [ ! -f "$STATE" ]; then
+  tmp_init="$(mktemp)"
+  echo '{"sessions":{}}' > "$tmp_init" && mv "$tmp_init" "$STATE"
+fi
 
 payload="$(cat)"
 sid="$(printf '%s' "$payload" | jq -r '.session_id // empty' 2>/dev/null || true)"
@@ -17,6 +20,9 @@ model="$(printf '%s' "$payload" | jq -r '.model // empty' 2>/dev/null || true)"
 event_to_status() {
   case "$1" in
     SessionStart) echo "idle" ;;
+    UserPromptSubmit) echo "working" ;;
+    Stop) echo "waiting" ;;
+    Notification) echo "attention" ;;
     *) echo "" ;;
   esac
 }
@@ -26,6 +32,13 @@ trigger_refresh() {
     open -g "swiftbar://refreshplugin?name=claude-signal" >/dev/null 2>&1 || true
   fi
 }
+
+if [ "$EVENT" = "SessionEnd" ]; then
+  tmp="$(mktemp)"
+  jq --arg sid "$sid" 'del(.sessions[$sid])' "$STATE" > "$tmp" && mv "$tmp" "$STATE"
+  trigger_refresh
+  exit 0
+fi
 
 status="$(event_to_status "$EVENT")"
 [ -n "$status" ] || exit 0

@@ -17,4 +17,22 @@ assert_eq "$(jq -r '.sessions.s1.model' "$STATE")" "claude-opus-4-8"
 echo '{"cwd":"/tmp/x"}' | "$ROOT/bin/hook-handler.sh" SessionStart
 assert_eq "$(jq -r '.sessions | length' "$STATE")" "1"
 
-echo "PASS test_hook_handler (Task 1)"
+# Full lifecycle on a fresh session s2
+echo '{"session_id":"s2","cwd":"/tmp/app","model":"claude-sonnet-4-6"}' | "$ROOT/bin/hook-handler.sh" SessionStart
+assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "idle"
+
+echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" UserPromptSubmit
+assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "working"
+# model preserved even though this payload omitted it
+assert_eq "$(jq -r '.sessions.s2.model' "$STATE")" "claude-sonnet-4-6"
+
+echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" Stop
+assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "waiting"
+
+echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" Notification
+assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "attention"
+
+echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" SessionEnd
+assert_eq "$(jq -r '.sessions.s2 // "gone"' "$STATE")" "gone"
+
+echo "PASS test_hook_handler (Task 2)"
