@@ -34,4 +34,17 @@ JSON
 out="$("$PLUGIN")"
 assert_eq "$(printf '%s' "$out" | head -1)" "🔴 2"
 
-echo "PASS test_plugin (Task 3)"
+# Dropdown lines: single working session, 12s old
+cat > "$STATE" <<'JSON'
+{"sessions":{
+  "a":{"status":"working","cwd":"/tmp/foo/myproj","model":"claude-opus-4-8","updated_at":999988}
+}}
+JSON
+out="$("$PLUGIN")"
+assert_contains "$out" "🟢 myproj"
+assert_contains "$out" "opus-4-8"
+assert_contains "$out" "12s 前"
+assert_contains "$out" 'param1="/tmp/foo/myproj"'
+assert_contains "$out" "刷新 | refresh=true"
+
+echo "PASS test_plugin (Task 4)"

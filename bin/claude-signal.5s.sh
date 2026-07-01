@@ -15,6 +15,17 @@ icon_for() {
   esac
 }
 
+rel_time() {
+  local d=$(( NOW - $1 ))
+  if [ "$d" -lt 10 ]; then echo "刚刚"
+  elif [ "$d" -lt 60 ]; then echo "${d}s 前"
+  elif [ "$d" -lt 3600 ]; then echo "$((d/60))m 前"
+  else echo "$((d/3600))h 前"
+  fi
+}
+
+short_model() { printf '%s' "${1#claude-}"; }
+
 if [ ! -f "$STATE" ]; then
   echo "⚪"
   echo "---"
@@ -44,3 +55,21 @@ done
 
 echo "$(icon_for "$agg") $count"
 echo "---"
+
+printf '%s' "$active" | jq -c 'sort_by(-.updated_at)[]' | while IFS= read -r row; do
+  st="$(printf '%s' "$row" | jq -r '.status')"
+  cwd="$(printf '%s' "$row" | jq -r '.cwd')"
+  model="$(printf '%s' "$row" | jq -r '.model')"
+  ua="$(printf '%s' "$row" | jq -r '.updated_at')"
+  if [ -n "$cwd" ]; then name="$(basename "$cwd")"; else name="(unknown)"; fi
+  sm="$(short_model "$model")"
+  label="$(icon_for "$st") $name  $sm · $(rel_time "$ua")"
+  if [ -n "$cwd" ]; then
+    echo "$label | bash=/usr/bin/open param1=\"$cwd\" terminal=false"
+  else
+    echo "$label"
+  fi
+done
+
+echo "---"
+echo "刷新 | refresh=true"
