@@ -35,8 +35,8 @@ fi
 # active (non-stale) sessions as a compact JSON array
 active="$(jq -c --argjson now "$NOW" --argjson stale "$STALE" '
   [ .sessions | to_entries[]
-    | select(($now - .value.updated_at) <= $stale)
-    | {sid: .key, status: .value.status, cwd: .value.cwd, model: .value.model, updated_at: .value.updated_at}
+    | select(($now - (.value.updated_at // 0)) <= $stale)
+    | {sid: .key, status: .value.status, cwd: .value.cwd, model: .value.model, updated_at: (.value.updated_at // 0)}
   ]' "$STATE")"
 
 count="$(printf '%s' "$active" | jq 'length')"

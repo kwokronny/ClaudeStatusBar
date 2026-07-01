@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Never disrupt Claude Code: whatever happens below, exit 0.
+trap 'exit 0' EXIT
+
 EVENT="${1:-}"
 DIR="${CLAUDE_SIGNAL_DIR:-$HOME/.claude/claude-signal}"
 STATE="$DIR/state.json"

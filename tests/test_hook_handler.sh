@@ -12,6 +12,8 @@ echo '{"session_id":"s1","cwd":"/tmp/proj","model":"claude-opus-4-8"}' \
 assert_eq "$(jq -r '.sessions.s1.status' "$STATE")" "idle"
 assert_eq "$(jq -r '.sessions.s1.cwd' "$STATE")" "/tmp/proj"
 assert_eq "$(jq -r '.sessions.s1.model' "$STATE")" "claude-opus-4-8"
+# updated_at must be a JSON number (the plugin's stale arithmetic depends on it)
+assert_eq "$(jq -r '.sessions.s1.updated_at | type' "$STATE")" "number"
 
 # Missing session_id -> no crash, no record
 echo '{"cwd":"/tmp/x"}' | "$ROOT/bin/hook-handler.sh" SessionStart
