@@ -20,6 +20,15 @@ sid="$(printf '%s' "$payload" | jq -r '.session_id // empty' 2>/dev/null || true
 cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null || true)"
 model="$(printf '%s' "$payload" | jq -r '.model // empty' 2>/dev/null || true)"
 
+# Session title = latest user prompt. Prefer the hook payload's prompt
+# (present on UserPromptSubmit); otherwise fall back to the transcript's
+# most recent last-prompt entry. Empty when neither is available.
+transcript="$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null || true)"
+title="$(printf '%s' "$payload" | jq -r '.prompt // empty' 2>/dev/null || true)"
+if [ -z "$title" ] && [ -n "$transcript" ] && [ -f "$transcript" ]; then
+  title="$(jq -rc 'select(.type=="last-prompt") | .lastPrompt' "$transcript" 2>/dev/null | tail -1 || true)"
+fi
+
 event_to_status() {
   case "$1" in
     SessionStart) echo "idle" ;;
@@ -48,11 +57,12 @@ status="$(event_to_status "$EVENT")"
 
 now="$(date +%s)"
 tmp="$(mktemp)"
-jq --arg sid "$sid" --arg status "$status" --arg cwd "$cwd" --arg model "$model" --argjson now "$now" '
+jq --arg sid "$sid" --arg status "$status" --arg cwd "$cwd" --arg model "$model" --arg title "$title" --argjson now "$now" '
   .sessions[$sid] = {
     status: $status,
     cwd: (if $cwd == "" then (.sessions[$sid].cwd // "") else $cwd end),
     model: (if $model == "" then (.sessions[$sid].model // "") else $model end),
+    title: (if $title == "" then (.sessions[$sid].title // "") else ($title | gsub("[\\r\\n|]"; " ")) end),
     updated_at: $now
   }' "$STATE" > "$tmp" && mv "$tmp" "$STATE"
 

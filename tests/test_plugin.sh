@@ -47,4 +47,26 @@ assert_contains "$out" "12s 前"
 assert_contains "$out" 'param1="/tmp/foo/myproj"'
 assert_contains "$out" "刷新 | refresh=true"
 
-echo "PASS test_plugin (Task 4)"
+# Dropdown headline uses the session title (latest prompt), truncated,
+# with cwd/model in the submenu
+cat > "$STATE" <<'JSON'
+{"sessions":{
+  "t":{"status":"working","cwd":"/tmp/foo/myproj","model":"claude-opus-4-8","updated_at":999988,"title":"fix the login flow bug end to end"}
+}}
+JSON
+out="$("$PLUGIN")"
+assert_contains "$out" "fix the login flow"        # title shown as headline
+assert_contains "$out" "…"                          # truncated (title > 20 chars)
+assert_contains "$out" "-- 📂 myproj"               # dir in submenu
+assert_contains "$out" "-- 🧠 opus-4-8"             # model in submenu
+
+# No title -> headline falls back to the directory name
+cat > "$STATE" <<'JSON'
+{"sessions":{
+  "u":{"status":"waiting","cwd":"/tmp/bar/webapp","model":"claude-sonnet-4-6","updated_at":999988,"title":""}
+}}
+JSON
+out="$("$PLUGIN")"
+assert_contains "$out" "🟡 webapp ·"                # dir name as headline
+
+echo "PASS test_plugin (Task 4 + title)"

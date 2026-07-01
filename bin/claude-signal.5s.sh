@@ -36,7 +36,7 @@ fi
 active="$(jq -c --argjson now "$NOW" --argjson stale "$STALE" '
   [ .sessions | to_entries[]
     | select(($now - (.value.updated_at // 0)) <= $stale)
-    | {sid: .key, status: .value.status, cwd: .value.cwd, model: .value.model, updated_at: (.value.updated_at // 0)}
+    | {sid: .key, status: .value.status, cwd: .value.cwd, model: .value.model, title: (.value.title // ""), updated_at: (.value.updated_at // 0)}
   ]' "$STATE")"
 
 count="$(printf '%s' "$active" | jq 'length')"
@@ -61,14 +61,20 @@ printf '%s' "$active" | jq -c 'sort_by(-.updated_at)[]' | while IFS= read -r row
   cwd="$(printf '%s' "$row" | jq -r '.cwd')"
   model="$(printf '%s' "$row" | jq -r '.model')"
   ua="$(printf '%s' "$row" | jq -r '.updated_at')"
+  # headline = latest prompt (truncated), falling back to the directory name
+  disp="$(printf '%s' "$row" | jq -r '.title | if . == "" then "" elif length > 20 then .[0:20] + "…" else . end')"
   if [ -n "$cwd" ]; then name="$(basename "$cwd")"; else name="(unknown)"; fi
+  if [ -n "$disp" ]; then headline="$disp"; else headline="$name"; fi
   sm="$(short_model "$model")"
-  label="$(icon_for "$st") $name  $sm · $(rel_time "$ua")"
+  label="$(icon_for "$st") $headline · $(rel_time "$ua")"
   if [ -n "$cwd" ]; then
     echo "$label | bash=/usr/bin/open param1=\"$cwd\" terminal=false"
+    echo "-- 📂 $name | bash=/usr/bin/open param1=\"$cwd\" terminal=false"
   else
     echo "$label"
+    echo "-- 📂 (unknown)"
   fi
+  echo "-- 🧠 $sm"
 done
 
 echo "---"

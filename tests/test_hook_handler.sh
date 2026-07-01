@@ -23,13 +23,17 @@ assert_eq "$(jq -r '.sessions | length' "$STATE")" "1"
 echo '{"session_id":"s2","cwd":"/tmp/app","model":"claude-sonnet-4-6"}' | "$ROOT/bin/hook-handler.sh" SessionStart
 assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "idle"
 
-echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" UserPromptSubmit
+echo '{"session_id":"s2","prompt":"fix the login bug"}' | "$ROOT/bin/hook-handler.sh" UserPromptSubmit
 assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "working"
 # model preserved even though this payload omitted it
 assert_eq "$(jq -r '.sessions.s2.model' "$STATE")" "claude-sonnet-4-6"
+# title captured from the payload's prompt field
+assert_eq "$(jq -r '.sessions.s2.title' "$STATE")" "fix the login bug"
 
 echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" Stop
 assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "waiting"
+# title preserved across an event whose payload has no prompt
+assert_eq "$(jq -r '.sessions.s2.title' "$STATE")" "fix the login bug"
 
 echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" Notification
 assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "attention"
