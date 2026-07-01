@@ -8,7 +8,15 @@ trap 'exit 0' EXIT   # an alert must never surface an error to the caller
 SID="${1:-}"
 DIR="${CLAUDE_SIGNAL_DIR:-$HOME/.claude/claude-signal}"
 STATE="$DIR/state.json"
-SOUND="${CLAUDE_SIGNAL_NOTIFY_SOUND:-/System/Library/Sounds/Glass.aiff}"
+# Sound: explicit env var wins; else a user-supplied alert.* dropped in the
+# state dir; else a macOS system sound.
+SOUND="${CLAUDE_SIGNAL_NOTIFY_SOUND:-}"
+if [ -z "$SOUND" ]; then
+  for f in "$DIR"/alert.aiff "$DIR"/alert.wav "$DIR"/alert.mp3 "$DIR"/alert.m4a "$DIR"/alert.caf; do
+    [ -f "$f" ] && { SOUND="$f"; break; }
+  done
+  [ -n "$SOUND" ] || SOUND="/System/Library/Sounds/Glass.aiff"
+fi
 [ -n "$SID" ] || exit 0
 [ -f "$STATE" ] || exit 0
 

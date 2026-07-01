@@ -80,10 +80,10 @@ jq --arg sid "$sid" --arg status "$status" --arg cwd "$cwd" --arg model "$model"
 # Alert when a session needs the user (answered & waiting, or needs auth),
 # debounced so the same session doesn't nag repeatedly. Fired detached so
 # the dialog never blocks Claude Code's hook.
-case " ${CLAUDE_SIGNAL_NOTIFY_ON:-attention} " in *" $status "*) do_notify=1 ;; *) do_notify="" ;; esac
+case " ${CLAUDE_SIGNAL_NOTIFY_ON:-waiting attention} " in *" $status "*) do_notify=1 ;; *) do_notify="" ;; esac
 if [ -z "${CLAUDE_SIGNAL_NO_NOTIFY:-}" ] && [ -n "$do_notify" ]; then
   last="$(jq -r --arg s "$sid" '.sessions[$s].notified_at // 0' "$STATE" 2>/dev/null || echo 0)"
-  if [ "$(( now - last ))" -ge "${CLAUDE_SIGNAL_NOTIFY_DEBOUNCE:-20}" ]; then
+  if [ "$(( now - last ))" -ge "${CLAUDE_SIGNAL_NOTIFY_DEBOUNCE:-5}" ]; then
     tmp2="$(mktemp)"
     jq --arg s "$sid" --argjson now "$now" '.sessions[$s].notified_at = $now' "$STATE" > "$tmp2" && mv "$tmp2" "$STATE"
     ( "$DIR/notify.sh" "$sid" >/dev/null 2>&1 & )
