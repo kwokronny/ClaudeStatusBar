@@ -102,6 +102,14 @@ attention(🔴) > working(🟢) > waiting(🟡) > idle(⚪)
 - 状态与 hook 脚本:`~/.claude/claude-signal/`(`state.json`、`hook-handler.sh`)
 - SwiftBar 插件:SwiftBar 的插件目录(安装步骤在 README 指引拷贝/软链)
 
+## 监控范围
+
+- 只监控 **Claude Code CLI** 会话,与所在终端无关(Terminal.app / iTerm2 / VS Code / JetBrains 终端均可)。
+- 覆盖范围由 hooks 配在哪决定:配在 `~/.claude/settings.json`(用户级,默认)→ 所有项目、所有终端的会话都监控;只配在项目 `.claude/settings.json` → 仅该项目的会话。
+- 每个终端窗口 = 一个独立 `session_id`,并存展示。
+- 不监控 claude.ai 网页版、Claude 桌面 App、以及非 Claude Code 的普通进程。
+- hooks 配好*之前*已启动的会话不会生效,需重开该会话。
+
 ## Hooks 配置
 
 在 `~/.claude/settings.json` 的 `hooks` 中,为 `UserPromptSubmit`、`Stop`、`Notification`、`SessionStart`、`SessionEnd` 各注册一条 command,均指向 `hook-handler.sh` 并以参数标明事件名。README 提供完整可粘贴片段。
