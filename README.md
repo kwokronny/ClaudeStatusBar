@@ -54,6 +54,17 @@ brew install --cask swiftbar
 
 Claude Code 在生命周期节点触发 hooks → `hook-handler.sh` 把状态写入 `~/.claude/claude-signal/state.json` 并用 `open -g "swiftbar://refreshplugin?name=claude-signal"` 让菜单栏秒级刷新。`claude-signal.5s.sh` 读状态、剔除超过 30 分钟没更新的僵尸会话、渲染图标。`5s` 是兜底心跳刷新频率。
 
+## 需要你时的提醒
+
+当会话进入 🟡(答完等你)或 🔴(要授权/关注)时,`hook-handler.sh` 会后台调 `notify.sh`:播放提示音 + 弹出对话框(带「跳转」按钮,点它直接聚焦到那个会话)。同一会话在短时间内不重复打扰(去抖)。可用环境变量调整:
+
+| 变量 | 默认 | 作用 |
+|---|---|---|
+| `CLAUDE_SIGNAL_NOTIFY_ON` | `waiting attention` | 哪些状态提醒。改成 `attention` 即"只在 🔴 时提醒" |
+| `CLAUDE_SIGNAL_NOTIFY_DEBOUNCE` | `20` | 同一会话最短提醒间隔(秒) |
+| `CLAUDE_SIGNAL_NOTIFY_SOUND` | `/System/Library/Sounds/Glass.aiff` | 提示音 |
+| `CLAUDE_SIGNAL_NO_NOTIFY` | (未设) | 设为任意值则完全关闭提醒 |
+
 ## 覆盖范围
 
 只监控 Claude Code CLI 会话(任意终端)。不监控 claude.ai 网页版、Claude 桌面 App。配在 `~/.claude/settings.json`(用户级)则所有项目都监控;配在项目 `.claude/settings.json` 则仅该项目。

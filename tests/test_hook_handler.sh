@@ -32,10 +32,13 @@ assert_eq "$(jq -r '.sessions.s2.model' "$STATE")" "claude-sonnet-4-6"
 # title captured from the payload's prompt field
 assert_eq "$(jq -r '.sessions.s2.title' "$STATE")" "fix the login bug"
 
-echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" Stop
+CLAUDE_SIGNAL_NOTIFY_DRYRUN=1 sh -c 'echo "{\"session_id\":\"s2\"}" | "$0" Stop' "$ROOT/bin/hook-handler.sh"
 assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "waiting"
 # title preserved across an event whose payload has no prompt
 assert_eq "$(jq -r '.sessions.s2.title' "$STATE")" "fix the login bug"
+# entering "waiting" records a notify timestamp (the debounce anchor)
+assert_eq "$(jq -r '.sessions.s2.notified_at | type' "$STATE")" "number"
+[ "$(jq -r '.sessions.s2.notified_at' "$STATE")" -gt 0 ] || { echo "FAIL: notified_at not set" >&2; exit 1; }
 
 echo '{"session_id":"s2"}' | "$ROOT/bin/hook-handler.sh" Notification
 assert_eq "$(jq -r '.sessions.s2.status' "$STATE")" "attention"
