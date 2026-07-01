@@ -6,10 +6,12 @@ export CLAUDE_SIGNAL_DIR="$(mktemp -d)"
 export CLAUDE_SIGNAL_NO_REFRESH=1
 STATE="$CLAUDE_SIGNAL_DIR/state.json"
 
-# SessionStart -> idle
+# SessionStart -> idle (with a terminal identity in the environment)
 echo '{"session_id":"s1","cwd":"/tmp/proj","model":"claude-opus-4-8"}' \
-  | "$ROOT/bin/hook-handler.sh" SessionStart
+  | TERM_PROGRAM="iTerm.app" "$ROOT/bin/hook-handler.sh" SessionStart
 assert_eq "$(jq -r '.sessions.s1.status' "$STATE")" "idle"
+# terminal program captured from the environment
+assert_eq "$(jq -r '.sessions.s1.term' "$STATE")" "iTerm.app"
 assert_eq "$(jq -r '.sessions.s1.cwd' "$STATE")" "/tmp/proj"
 assert_eq "$(jq -r '.sessions.s1.model' "$STATE")" "claude-opus-4-8"
 # updated_at must be a JSON number (the plugin's stale arithmetic depends on it)

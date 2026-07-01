@@ -23,6 +23,14 @@ model="$(printf '%s' "$payload" | jq -r '.model // empty' 2>/dev/null || true)"
 # Session title = latest user prompt. Prefer the hook payload's prompt
 # (present on UserPromptSubmit); otherwise fall back to the transcript's
 # most recent last-prompt entry. Empty when neither is available.
+# Terminal identity, so a menu click can focus the exact window later.
+# TERM_PROGRAM / the controlling tty are inherited from the Claude Code
+# process's environment (empty when it runs in the desktop app).
+term="${TERM_PROGRAM:-}"
+tty=""
+raw_tty="$(ps -o tty= -p "$PPID" 2>/dev/null | tr -d '[:space:]' || true)"
+if [ -n "$raw_tty" ] && [ "$raw_tty" != "??" ]; then tty="/dev/$raw_tty"; fi
+
 transcript="$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null || true)"
 title="$(printf '%s' "$payload" | jq -r '.prompt // empty' 2>/dev/null || true)"
 if [ -z "$title" ] && [ -n "$transcript" ] && [ -f "$transcript" ]; then
@@ -57,12 +65,14 @@ status="$(event_to_status "$EVENT")"
 
 now="$(date +%s)"
 tmp="$(mktemp)"
-jq --arg sid "$sid" --arg status "$status" --arg cwd "$cwd" --arg model "$model" --arg title "$title" --argjson now "$now" '
+jq --arg sid "$sid" --arg status "$status" --arg cwd "$cwd" --arg model "$model" --arg title "$title" --arg term "$term" --arg tty "$tty" --argjson now "$now" '
   .sessions[$sid] = {
     status: $status,
     cwd: (if $cwd == "" then (.sessions[$sid].cwd // "") else $cwd end),
     model: (if $model == "" then (.sessions[$sid].model // "") else $model end),
     title: (if $title == "" then (.sessions[$sid].title // "") else ($title | gsub("[\\r\\n|]"; " ")) end),
+    term: (if $term == "" then (.sessions[$sid].term // "") else $term end),
+    tty: (if $tty == "" then (.sessions[$sid].tty // "") else $tty end),
     updated_at: $now
   }' "$STATE" > "$tmp" && mv "$tmp" "$STATE"
 

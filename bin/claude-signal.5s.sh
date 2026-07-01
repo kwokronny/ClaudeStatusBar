@@ -56,7 +56,9 @@ done
 echo "$(icon_for "$agg") $count"
 echo "---"
 
+FOCUS="$DIR/focus-session.sh"
 printf '%s' "$active" | jq -c 'sort_by(-.updated_at)[]' | while IFS= read -r row; do
+  sid="$(printf '%s' "$row" | jq -r '.sid')"
   st="$(printf '%s' "$row" | jq -r '.status')"
   cwd="$(printf '%s' "$row" | jq -r '.cwd')"
   model="$(printf '%s' "$row" | jq -r '.model')"
@@ -67,11 +69,12 @@ printf '%s' "$active" | jq -c 'sort_by(-.updated_at)[]' | while IFS= read -r row
   if [ -n "$disp" ]; then headline="$disp"; else headline="$name"; fi
   sm="$(short_model "$model")"
   label="$(icon_for "$st") $headline · $(rel_time "$ua")"
+  # click the row -> focus the terminal/window running that session
+  echo "$label | bash=\"$FOCUS\" param1=\"$sid\" terminal=false"
+  # submenu keeps the plain "open folder in Finder" affordance + model
   if [ -n "$cwd" ]; then
-    echo "$label | bash=/usr/bin/open param1=\"$cwd\" terminal=false"
     echo "-- 📂 $name | bash=/usr/bin/open param1=\"$cwd\" terminal=false"
   else
-    echo "$label"
     echo "-- 📂 (unknown)"
   fi
   echo "-- 🧠 $sm"
