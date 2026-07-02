@@ -6,21 +6,36 @@ macOS 菜单栏状态灯,实时反映 Claude Code 会话状态。
 - 多会话并存,菜单栏取最需关注的状态;下拉逐条列出会话,每条以该会话的**最新提问**为标题(过长截断),子菜单里放完整目录和模型。
 - **点击一条会话** → 聚焦到正在跑它的终端/窗口:iTerm、Terminal.app 精确到标签页(按 tty 定位),VS Code 聚焦该文件夹窗口,Claude Code 桌面 App 会话则激活 App。首次点击 macOS 会弹窗要求授权 SwiftBar 控制终端,同意即可。子菜单的 📂 仍可在 Finder 打开目录。
 
-## 依赖
+## 快速安装(推荐)
+
+```bash
+git clone <此仓库地址> claude-signal
+cd claude-signal
+./install.sh          # 自动装依赖、放脚本/插件、接入 hooks、启动 SwiftBar
+```
+
+安装后**新开**的 Claude Code 会话会点亮菜单栏(已运行的会话需重开)。卸载:`./uninstall.sh`。
+自定义提示音:把音效放到 `~/.claude/claude-signal/alert.mp3`(或 `.wav/.aiff/.m4a/.caf`)。
+
+`install.sh` 幂等,可重复运行升级;它会先备份你的 `~/.claude/settings.json`,且不影响你已有的其它 hooks。
+
+---
+
+## 手动安装
+
+依赖:
 
 ```bash
 brew install jq
 brew install --cask swiftbar
 ```
 
-## 安装
-
 1. 拷贝 hook 脚本到 `~/.claude/claude-signal/` 并赋可执行权限:
 
    ```bash
    mkdir -p ~/.claude/claude-signal
-   cp bin/hook-handler.sh bin/focus-session.sh ~/.claude/claude-signal/
-   chmod +x ~/.claude/claude-signal/hook-handler.sh ~/.claude/claude-signal/focus-session.sh
+   cp bin/hook-handler.sh bin/focus-session.sh bin/notify.sh ~/.claude/claude-signal/
+   chmod +x ~/.claude/claude-signal/hook-handler.sh ~/.claude/claude-signal/focus-session.sh ~/.claude/claude-signal/notify.sh
    ```
 
 2. 拷贝插件到 SwiftBar 的插件目录(首次启动 SwiftBar 时会让你选择该目录),并赋可执行权限:
