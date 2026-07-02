@@ -28,8 +28,13 @@ echo "· 拷贝脚本到 $DIR"
 mkdir -p "$DIR"
 cp "$HERE/bin/hook-handler.sh" "$HERE/bin/focus-session.sh" "$HERE/bin/notify.sh" "$DIR/"
 chmod +x "$DIR/hook-handler.sh" "$DIR/focus-session.sh" "$DIR/notify.sh"
-# 可选:仓库自带的默认提示音
-[ -f "$HERE/assets/alert.mp3" ] && cp "$HERE/assets/alert.mp3" "$DIR/alert.mp3"
+# 提示音:仓库自带的放到正确位置。先清掉旧的 alert.*(避免 aiff 等高优先级
+# 扩展名盖住新音效),再拷入。用户自设 CLAUDE_SIGNAL_NOTIFY_SOUND 仍然优先。
+if ls "$HERE"/assets/alert.* >/dev/null 2>&1; then
+  rm -f "$DIR"/alert.aiff "$DIR"/alert.wav "$DIR"/alert.mp3 "$DIR"/alert.m4a "$DIR"/alert.caf
+  cp "$HERE"/assets/alert.* "$DIR/"
+  echo "· 已安装提示音 $(basename "$HERE"/assets/alert.*)"
+fi
 
 # 4. 插件目录 + 插件
 PLUGDIR="$(defaults read "$SB_ID" PluginDirectory 2>/dev/null || true)"

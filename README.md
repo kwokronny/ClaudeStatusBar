@@ -9,9 +9,9 @@ macOS 菜单栏状态灯,实时反映 Claude Code 会话状态。
 ## 快速安装(推荐)
 
 ```bash
-git clone <此仓库地址> claude-signal
-cd claude-signal
-./install.sh          # 自动装依赖、放脚本/插件、接入 hooks、启动 SwiftBar
+git clone git@github.com:kwokronny/ClaudeStatusBar.git
+cd ClaudeStatusBar
+./install.sh          # 自动装依赖、放脚本/插件/提示音、接入 hooks、启动 SwiftBar
 ```
 
 安装后**新开**的 Claude Code 会话会点亮菜单栏(已运行的会话需重开)。卸载:`./uninstall.sh`。
