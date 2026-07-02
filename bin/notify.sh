@@ -23,6 +23,8 @@ fi
 status="$(jq -r --arg s "$SID" '.sessions[$s].status // ""' "$STATE" 2>/dev/null || true)"
 title="$(jq -r --arg s "$SID" '.sessions[$s].title // ""' "$STATE" 2>/dev/null || true)"
 cwd="$(jq -r --arg s "$SID" '.sessions[$s].cwd // ""' "$STATE" 2>/dev/null || true)"
+term="$(jq -r --arg s "$SID" '.sessions[$s].term // ""' "$STATE" 2>/dev/null || true)"
+tty="$(jq -r --arg s "$SID" '.sessions[$s].tty // ""' "$STATE" 2>/dev/null || true)"
 
 case "$status" in
   waiting)   msg="答完了,该你了" ;;
@@ -37,16 +39,44 @@ else
   body="$msg  ·  $name"
 fi
 
+# Are you already sitting in this very session? If so, the sound alone is
+# enough — skip the dialog. "In this session" = the frontmost terminal tab's
+# tty matches, or (no tty, e.g. desktop app / VS Code) the session's own app
+# is frontmost. Overridable via env for testing.
+frontapp="${CLAUDE_SIGNAL_FRONT_APP:-$(osascript -e 'tell application "System Events" to name of first process whose frontmost is true' 2>/dev/null || true)}"
+if [ -n "${CLAUDE_SIGNAL_ACTIVE_TTY+x}" ]; then
+  active_tty="$CLAUDE_SIGNAL_ACTIVE_TTY"
+else
+  case "$frontapp" in
+    iTerm*)   active_tty="$(osascript -e 'tell application "iTerm" to tty of current session of current window' 2>/dev/null || true)" ;;
+    Terminal) active_tty="$(osascript -e 'tell application "Terminal" to tty of selected tab of front window' 2>/dev/null || true)" ;;
+    *)        active_tty="" ;;
+  esac
+fi
+active=""
+if [ -n "$active_tty" ] && [ "$tty" = "$active_tty" ]; then
+  active=1                                   # exact: frontmost tab IS this session
+elif [ -z "$active_tty" ]; then
+  case "$term:$frontapp" in
+    ":Claude") active=1 ;;                                            # desktop-app session, Claude frontmost
+    "vscode:Code"|"vscode:Electron"|"vscode:Code - Insiders") active=1 ;;  # VS Code session, VS Code frontmost
+  esac
+fi
+
 # Dry-run: report the composed alert instead of playing/showing it (tests).
 if [ -n "${CLAUDE_SIGNAL_NOTIFY_DRYRUN:-}" ]; then
   echo "sound=$SOUND"
   echo "status=$status"
   echo "msg=$msg"
+  echo "dialog=$([ -n "$active" ] && echo no || echo yes)"
   exit 0
 fi
 
-# sound, non-blocking
+# sound, non-blocking (always — this is the "仅提示" part)
 [ -f "$SOUND" ] && afplay "$SOUND" >/dev/null 2>&1 &
+
+# already in this session -> sound is enough, no dialog
+[ -n "$active" ] && exit 0
 
 # dialog with a jump button; body passed as argv so quotes/newlines in the
 # title can't break the AppleScript
