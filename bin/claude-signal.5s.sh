@@ -81,4 +81,19 @@ printf '%s' "$active" | jq -c 'sort_by(-.updated_at)[]' | while IFS= read -r row
 done
 
 echo "---"
+
+# sound picker: list the library, ✓ the active one, click to switch
+SETSND="$DIR/set-sound.sh"
+cur=""
+[ -f "$DIR/sound" ] && cur="$(cat "$DIR/sound" 2>/dev/null || true)"
+if [ -d "$DIR/sounds" ]; then
+  echo "🔔 提示音"
+  for f in "$DIR"/sounds/*; do
+    [ -f "$f" ] || continue
+    b="$(basename "$f")"
+    if [ "$b" = "$cur" ]; then mark="✓ "; else mark="　"; fi
+    echo "-- ${mark}${b%.*} | bash=\"$SETSND\" param1=\"$b\" terminal=false refresh=true"
+  done
+fi
+
 echo "刷新 | refresh=true"

@@ -26,14 +26,20 @@ fi
 # 3. 脚本
 echo "· 拷贝脚本到 $DIR"
 mkdir -p "$DIR"
-cp "$HERE/bin/hook-handler.sh" "$HERE/bin/focus-session.sh" "$HERE/bin/notify.sh" "$DIR/"
-chmod +x "$DIR/hook-handler.sh" "$DIR/focus-session.sh" "$DIR/notify.sh"
-# 提示音:仓库自带的放到正确位置。先清掉旧的 alert.*(避免 aiff 等高优先级
-# 扩展名盖住新音效),再拷入。用户自设 CLAUDE_SIGNAL_NOTIFY_SOUND 仍然优先。
-if ls "$HERE"/assets/alert.* >/dev/null 2>&1; then
+cp "$HERE/bin/hook-handler.sh" "$HERE/bin/focus-session.sh" "$HERE/bin/notify.sh" "$HERE/bin/set-sound.sh" "$DIR/"
+chmod +x "$DIR/hook-handler.sh" "$DIR/focus-session.sh" "$DIR/notify.sh" "$DIR/set-sound.sh"
+
+# 提示音库:仓库自带的音效拷到 sounds/,菜单栏可切换。首次安装播下默认指针。
+if [ -d "$HERE/assets/sounds" ]; then
+  mkdir -p "$DIR/sounds"
+  cp "$HERE"/assets/sounds/* "$DIR/sounds/" 2>/dev/null || true
+  if [ ! -f "$DIR/sound" ]; then
+    if [ -f "$DIR/sounds/default.mp3" ]; then printf 'default.mp3\n' > "$DIR/sound"
+    else first="$(ls "$DIR/sounds" 2>/dev/null | head -1)"; [ -n "$first" ] && printf '%s\n' "$first" > "$DIR/sound"; fi
+  fi
+  # 清掉旧的单一 alert.*(已被音效库取代)
   rm -f "$DIR"/alert.aiff "$DIR"/alert.wav "$DIR"/alert.mp3 "$DIR"/alert.m4a "$DIR"/alert.caf
-  cp "$HERE"/assets/alert.* "$DIR/"
-  echo "· 已安装提示音 $(basename "$HERE"/assets/alert.*)"
+  echo "· 已安装音效库($(ls "$DIR/sounds" 2>/dev/null | wc -l | tr -d ' ') 个,菜单栏「🔔 提示音」可切换)"
 fi
 
 # 4. 插件目录 + 插件
@@ -70,6 +76,7 @@ cat <<'DONE'
 
 ✔ 安装完成。
   · 新开的 Claude Code 会话会自动点亮菜单栏(已在运行的会话需重开才生效)。
-  · 自定义提示音:把音效放到 ~/.claude/claude-signal/alert.mp3(或 .wav/.aiff/.m4a/.caf)。
+  · 切换提示音:菜单栏下拉「🔔 提示音」点选即可。
+  · 加自己的音效:丢进 ~/.claude/claude-signal/sounds/(mp3/wav/aiff/m4a/caf)。
   · 卸载:./uninstall.sh
 DONE

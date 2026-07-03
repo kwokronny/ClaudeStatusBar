@@ -15,7 +15,7 @@ cd ClaudeStatusBar
 ```
 
 安装后**新开**的 Claude Code 会话会点亮菜单栏(已运行的会话需重开)。卸载:`./uninstall.sh`。
-自定义提示音:把音效放到 `~/.claude/claude-signal/alert.mp3`(或 `.wav/.aiff/.m4a/.caf`)。
+切换提示音:菜单栏下拉「🔔 提示音」点选;加自己的音效丢进 `~/.claude/claude-signal/sounds/`。
 
 `install.sh` 幂等,可重复运行升级;它会先备份你的 `~/.claude/settings.json`,且不影响你已有的其它 hooks。
 
@@ -84,7 +84,9 @@ Claude Code 在生命周期节点触发 hooks → `hook-handler.sh` 把状态写
 | `CLAUDE_SIGNAL_NOTIFY_SOUND` | 见下 | 提示音文件(afplay 播放) |
 | `CLAUDE_SIGNAL_NO_NOTIFY` | (未设) | 设为任意值则完全关闭提醒 |
 
-**自定义提示音**:把音效文件放到 `~/.claude/claude-signal/alert.aiff`(或 `.wav/.mp3/.m4a/.caf`)即自动启用;没有则回退系统音 `Glass.aiff`。`CLAUDE_SIGNAL_NOTIFY_SOUND` 若设置则优先。
+**切换/新增提示音**:菜单栏下拉「🔔 提示音」列出音效库,点一下即切换(当前项打 ✓,点击会试听)。音效库在 `~/.claude/claude-signal/sounds/`,把任意 `mp3/wav/aiff/m4a/caf` 丢进去就出现在菜单里。当前选中记录在 `~/.claude/claude-signal/sound`。
+
+解析优先级:`CLAUDE_SIGNAL_NOTIFY_SOUND`(环境变量)> 菜单选中的库音效 > 旧的 `alert.*` > 系统音 `Glass.aiff`。
 
 ## 覆盖范围
 

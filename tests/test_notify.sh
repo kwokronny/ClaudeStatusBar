@@ -38,6 +38,11 @@ assert_contains "$("$NOTIFY" w)" "sound=/System/Library/Sounds/"
 : > "$CLAUDE_SIGNAL_DIR/alert.wav"
 assert_contains "$("$NOTIFY" w)" "sound=$CLAUDE_SIGNAL_DIR/alert.wav"
 rm -f "$CLAUDE_SIGNAL_DIR/alert.wav"
+# the active pointer (library pick) outranks a legacy alert.*
+mkdir -p "$CLAUDE_SIGNAL_DIR/sounds"; : > "$CLAUDE_SIGNAL_DIR/sounds/pick.wav"; : > "$CLAUDE_SIGNAL_DIR/alert.wav"
+printf 'pick.wav\n' > "$CLAUDE_SIGNAL_DIR/sound"
+assert_contains "$("$NOTIFY" w)" "sound=$CLAUDE_SIGNAL_DIR/sounds/pick.wav"
+rm -f "$CLAUDE_SIGNAL_DIR/sound" "$CLAUDE_SIGNAL_DIR/alert.wav"; rm -rf "$CLAUDE_SIGNAL_DIR/sounds"
 # a running session does not alert -> no output
 assert_eq "$("$NOTIFY" r)" ""
 # unknown session -> no output, no crash

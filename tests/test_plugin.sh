@@ -69,4 +69,19 @@ JSON
 out="$("$PLUGIN")"
 assert_contains "$out" "🟡 webapp ·"                # dir name as headline
 
-echo "PASS test_plugin (Task 4 + title)"
+# sound picker submenu: lists the library, ✓ the active one, click switches
+cat > "$STATE" <<'JSON'
+{"sessions":{"s":{"status":"working","cwd":"/tmp/p","model":"","updated_at":999990}}}
+JSON
+mkdir -p "$CLAUDE_SIGNAL_DIR/sounds"
+: > "$CLAUDE_SIGNAL_DIR/sounds/default.mp3"
+: > "$CLAUDE_SIGNAL_DIR/sounds/红警-任务完成.wav"
+printf '红警-任务完成.wav\n' > "$CLAUDE_SIGNAL_DIR/sound"
+out="$("$PLUGIN")"
+assert_contains "$out" "🔔 提示音"
+assert_contains "$out" "-- ✓ 红警-任务完成 | bash="            # active one marked + clickable
+assert_contains "$out" "set-sound.sh"
+assert_contains "$out" 'param1="default.mp3"'                 # the other is switchable
+rm -rf "$CLAUDE_SIGNAL_DIR/sounds" "$CLAUDE_SIGNAL_DIR/sound"
+
+echo "PASS test_plugin (Task 4 + title + sound picker)"
