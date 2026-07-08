@@ -86,9 +86,12 @@ if [ -z "${CLAUDE_SIGNAL_NO_NOTIFY:-}" ] && [ -n "$do_notify" ]; then
   if [ "$(( now - last ))" -ge "${CLAUDE_SIGNAL_NOTIFY_DEBOUNCE:-5}" ]; then
     tmp2="$(mktemp)"
     jq --arg s "$sid" --argjson now "$now" '.sessions[$s].notified_at = $now' "$STATE" > "$tmp2" && mv "$tmp2" "$STATE"
-    # nohup + detach so the alert survives the hook process being reaped
-    # (terminal hooks can kill the hook's children on return, cutting the sound)
-    nohup "$DIR/notify.sh" "$sid" >/dev/null 2>&1 &
+    # Detach into a NEW SESSION via setsid so the alert survives the hook
+    # being reaped — terminal hooks can kill the hook's whole process group on
+    # return, which cuts the sound; nohup alone doesn't escape that. perl ships
+    # with macOS and gives us setsid without a binary dependency.
+    perl -e 'use POSIX qw(setsid); setsid(); exec @ARGV or exit 127' \
+      "$DIR/notify.sh" "$sid" >/dev/null 2>&1 &
     disown 2>/dev/null || true
   fi
 fi

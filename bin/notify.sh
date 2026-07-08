@@ -44,10 +44,14 @@ else
 fi
 
 # Play the sound FIRST, before any osascript — so a slow/denied automation
-# permission on the frontmost checks below can never swallow the cue. This is
-# the "仅提示" guarantee. (Skipped in dry-run.)
-if [ -z "${CLAUDE_SIGNAL_NOTIFY_DRYRUN:-}" ] && [ -f "$SOUND" ]; then
-  afplay "$SOUND" >/dev/null 2>&1 &
+# permission on the frontmost checks below can never swallow the cue. Played
+# in the FOREGROUND (this whole script is already detached from the hook via
+# setsid, so it blocks nothing) with an absolute path in case PATH is bare.
+# (Skipped in dry-run.)
+AFPLAY="$(command -v afplay 2>/dev/null || echo /usr/bin/afplay)"
+if [ -z "${CLAUDE_SIGNAL_NOTIFY_DRYRUN:-}" ]; then
+  printf '%s sid=%s status=%s sound=%s\n' "$(date '+%F %T')" "$SID" "$status" "$SOUND" >> "$DIR/notify.log" 2>/dev/null || true
+  [ -f "$SOUND" ] && "$AFPLAY" "$SOUND" >/dev/null 2>&1 || true
 fi
 
 # Are you already sitting in this very session? If so, the sound alone is

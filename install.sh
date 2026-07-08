@@ -34,7 +34,7 @@ if [ -d "$HERE/assets/sounds" ]; then
   mkdir -p "$DIR/sounds"
   cp "$HERE"/assets/sounds/* "$DIR/sounds/" 2>/dev/null || true
   if [ ! -f "$DIR/sound" ]; then
-    if [ -f "$DIR/sounds/default.mp3" ]; then printf 'default.mp3\n' > "$DIR/sound"
+    if [ -f "$DIR/sounds/没座.mp3" ]; then printf '没座.mp3\n' > "$DIR/sound"
     else first="$(ls "$DIR/sounds" 2>/dev/null | head -1)"; [ -n "$first" ] && printf '%s\n' "$first" > "$DIR/sound"; fi
   fi
   # 清掉旧的单一 alert.*(已被音效库取代)
