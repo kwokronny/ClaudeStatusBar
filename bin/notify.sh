@@ -43,6 +43,13 @@ else
   body="$msg  ·  $name"
 fi
 
+# Play the sound FIRST, before any osascript — so a slow/denied automation
+# permission on the frontmost checks below can never swallow the cue. This is
+# the "仅提示" guarantee. (Skipped in dry-run.)
+if [ -z "${CLAUDE_SIGNAL_NOTIFY_DRYRUN:-}" ] && [ -f "$SOUND" ]; then
+  afplay "$SOUND" >/dev/null 2>&1 &
+fi
+
 # Are you already sitting in this very session? If so, the sound alone is
 # enough — skip the dialog. "In this session" = the frontmost terminal tab's
 # tty matches, or (no tty, e.g. desktop app / VS Code) the session's own app
@@ -76,10 +83,7 @@ if [ -n "${CLAUDE_SIGNAL_NOTIFY_DRYRUN:-}" ]; then
   exit 0
 fi
 
-# sound, non-blocking (always — this is the "仅提示" part)
-[ -f "$SOUND" ] && afplay "$SOUND" >/dev/null 2>&1 &
-
-# already in this session -> sound is enough, no dialog
+# already in this session -> the sound (played above) is enough, no dialog
 [ -n "$active" ] && exit 0
 
 # dialog with a jump button; body passed as argv so quotes/newlines in the

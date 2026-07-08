@@ -86,7 +86,10 @@ if [ -z "${CLAUDE_SIGNAL_NO_NOTIFY:-}" ] && [ -n "$do_notify" ]; then
   if [ "$(( now - last ))" -ge "${CLAUDE_SIGNAL_NOTIFY_DEBOUNCE:-5}" ]; then
     tmp2="$(mktemp)"
     jq --arg s "$sid" --argjson now "$now" '.sessions[$s].notified_at = $now' "$STATE" > "$tmp2" && mv "$tmp2" "$STATE"
-    ( "$DIR/notify.sh" "$sid" >/dev/null 2>&1 & )
+    # nohup + detach so the alert survives the hook process being reaped
+    # (terminal hooks can kill the hook's children on return, cutting the sound)
+    nohup "$DIR/notify.sh" "$sid" >/dev/null 2>&1 &
+    disown 2>/dev/null || true
   fi
 fi
 
