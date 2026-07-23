@@ -15,6 +15,8 @@ cd ClaudeStatusBar
 ```
 
 安装后**新开**的 Claude Code 会话会点亮菜单栏(已运行的会话需重开)。卸载:`./uninstall.sh`。
+
+**菜单栏没出现灯?** 运行 `./doctor.sh` 自检。最常见原因:SwiftBar 首次启动的欢迎窗没选插件文件夹——打开 SwiftBar → 首次欢迎窗(或 Preferences)把 **Plugin Folder** 设为 `~/.claude/claude-signal/plugins`,再点菜单里的 **Refresh All**。
 切换提示音:菜单栏下拉「🔔 提示音」点选;加自己的音效丢进 `~/.claude/claude-signal/sounds/`。
 
 `install.sh` 幂等,可重复运行升级;它会先备份你的 `~/.claude/settings.json`,且不影响你已有的其它 hooks。
